@@ -16,6 +16,7 @@
 
 package com.materialstudies.reply.ui.compose
 
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -25,6 +26,9 @@ import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.transition.Slide
+import androidx.transition.TransitionManager
+import com.google.android.material.transition.MaterialContainerTransform
 import com.materialstudies.reply.R
 import com.materialstudies.reply.data.Account
 import com.materialstudies.reply.data.AccountStore
@@ -32,6 +36,7 @@ import com.materialstudies.reply.data.Email
 import com.materialstudies.reply.data.EmailStore
 import com.materialstudies.reply.databinding.ComposeRecipientChipBinding
 import com.materialstudies.reply.databinding.FragmentComposeBinding
+import com.materialstudies.reply.util.themeColor
 import kotlin.LazyThreadSafetyMode.NONE
 
 /**
@@ -86,7 +91,22 @@ class ComposeFragment : Fragment() {
                 AccountStore.getAllUserAccounts().map { it.email }
             )
 
-            // TODO: Set up MaterialContainerTransform enterTransition and Slide returnTransition.
+            // Set transitions here so we are able to access Fragment's binding views.
+            enterTransition = MaterialContainerTransform().apply {
+                // Manually add the Views to be shared since this is not a standard Fragment to
+                // Fragment shared element transition.
+                startView = requireActivity().findViewById(R.id.fab)
+                endView = emailCardView
+                duration = resources.getInteger(R.integer.reply_motion_duration_large).toLong()
+                scrimColor = Color.TRANSPARENT
+                containerColor = requireContext().themeColor(R.attr.colorSurface)
+                startContainerColor = requireContext().themeColor(R.attr.colorSecondary)
+                endContainerColor = requireContext().themeColor(R.attr.colorSurface)
+            }
+            returnTransition = Slide().apply {
+                duration = resources.getInteger(R.integer.reply_motion_duration_medium).toLong()
+                addTarget(R.id.email_card_view)
+            }
         }
     }
 
@@ -130,7 +150,20 @@ class ComposeFragment : Fragment() {
         closeRecipientCardOnBackPressed.expandedChip = chip
         closeRecipientCardOnBackPressed.isEnabled = true
 
-        // TODO: Set up MaterialContainerTransform beginDelayedTransition.
+        val transform = MaterialContainerTransform().apply {
+            startView = chip
+            endView = binding.recipientCardView
+            scrimColor = Color.TRANSPARENT
+            // Have the transform match the endView card's native elevation as closely as possible.
+            endElevation = requireContext().resources.getDimension(
+                R.dimen.email_recipient_card_popup_elevation_compat
+            )
+            // Avoid having this transform from running on both the start and end views by setting
+            // its target to the endView.
+            addTarget(binding.recipientCardView)
+        }
+
+        TransitionManager.beginDelayedTransition(binding.composeConstraintLayout, transform)
         binding.recipientCardView.visibility = View.VISIBLE
         // Using INVISIBLE instead of GONE ensures the chip's parent layout won't shift during
         // the transition due to chips being effectively removed.
@@ -146,7 +179,17 @@ class ComposeFragment : Fragment() {
         closeRecipientCardOnBackPressed.expandedChip = null
         closeRecipientCardOnBackPressed.isEnabled = false
 
-        // TODO: Set up MaterialContainerTransform beginDelayedTransition.
+        val transform = MaterialContainerTransform().apply {
+            startView = binding.recipientCardView
+            endView = chip
+            scrimColor = Color.TRANSPARENT
+            startElevation = requireContext().resources.getDimension(
+                R.dimen.email_recipient_card_popup_elevation_compat
+            )
+            addTarget(chip)
+        }
+
+        TransitionManager.beginDelayedTransition(binding.composeConstraintLayout, transform)
         chip.visibility = View.VISIBLE
         binding.recipientCardView.visibility = View.INVISIBLE
     }
