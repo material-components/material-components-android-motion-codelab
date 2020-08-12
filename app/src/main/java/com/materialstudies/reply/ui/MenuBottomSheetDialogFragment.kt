@@ -18,7 +18,6 @@ package com.materialstudies.reply.ui
 
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.MenuRes
@@ -26,7 +25,10 @@ import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.navigation.NavigationView
 import com.materialstudies.reply.R
 
-class MenuBottomSheetDialogFragment() : BottomSheetDialogFragment() {
+/**
+ * A bottom sheet dialog for displaying a simple list of action items.
+ */
+class MenuBottomSheetDialogFragment : BottomSheetDialogFragment() {
 
     private lateinit var navigationView: NavigationView
     @MenuRes private var menuResId: Int = 0
